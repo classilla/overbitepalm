@@ -751,6 +751,7 @@ while true do
         -- 12 = down
         -- 310/7 = centre
         -- 308 = left
+		-- 28 = left (Clie UX50)
         -- 309 = right
         -- 516 = home
         -- 517 = calendar
@@ -776,7 +777,7 @@ while true do
 
         -- Left as back
         -- Don't use Dana's keys here; they might be seen on the URL field.
-        if id == 308 then
+        if id == 28 or id == 308 then
           debounce()
           ev = navigateback()
         end
@@ -784,7 +785,8 @@ while true do
         -- Centre
         -- Zire 72 uses 310
         -- TX uses 317
-        if id == 310 or id == 317 or id == 10 then
+		-- Clie UX50 uses 5893
+        if id == 5893 or id == 310 or id == 317 or id == 10 then
           debounce()
           arg = seli
           lastsel = seli
@@ -914,7 +916,7 @@ while true do
 
         -- Left as back
         -- Don't use Dana's keys here; they might be seen on the URL field.
-        if id == 308 then
+        if id == 28 or id == 308 then
           debounce()
           ev = navigateback()
         end
