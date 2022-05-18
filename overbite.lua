@@ -751,7 +751,7 @@ while true do
         -- 12 = down
         -- 310/7 = centre
         -- 308 = left
-		-- 28 = left (Clie UX50)
+        -- 28 = left (Clie UX50)
         -- 309 = right
         -- 516 = home
         -- 517 = calendar
@@ -785,7 +785,7 @@ while true do
         -- Centre
         -- Zire 72 uses 310
         -- TX uses 317
-		-- Clie UX50 uses 5893
+        -- Clie UX50 uses 5893
         if id == 5893 or id == 310 or id == 317 or id == 10 then
           debounce()
           arg = seli
