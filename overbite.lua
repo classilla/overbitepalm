@@ -533,6 +533,7 @@ while true do
 
   if ctev == overbiteLoad then
     urlandlocation()
+    u, t = os.mem()
     -- Make a guess at how much we can load into memory.
     -- Some PalmOS devices may be very limited on dynamic heap,
     -- particularly PalmOS 4 systems. Assign a reasonable
@@ -543,16 +544,12 @@ while true do
     -- but clearing itypes/dses/etc. wipes the cache. Sadly,
     -- there isn't much we can do to free additional memory
     -- if we're short.
-    u, t = os.mem()
-    kfree = math.floor((t - u) / 8)
-    -- The text gadget seems to double memory requirements.
+    kfree = math.floor((t - u) / 8) -- heuristic
     if itype == "0" then
+      -- The text gadget doubles memory requirements.
       kfree = math.floor(kfree / 2)
     end
     bfree = kfree * 1024
-    if kfree < 2 then
-      gui.alert("Out of memory")
-    end
 
     -- fetch from network
 
@@ -562,8 +559,9 @@ while true do
         s = aboutstrr()
       end
       if kfree < 2 then
+        -- eek
         itype = "builtin"
-        s = "Not enough memory to display ("
+        s = "Not enough dynamic heap to display ("
           .. u
           .. "K used of "
           .. t
@@ -734,6 +732,7 @@ while true do
           table.insert(ports, 0)
         end
       end
+      s="" -- recover memory
     end
 
     gui.destroy()
