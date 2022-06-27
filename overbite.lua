@@ -588,6 +588,24 @@ while true do
               break
             else
               buf = string.gsub(buf, "\r", "")
+
+              -- Although we could allocate up to 64K for the buffer, in
+              -- practise the scrolling gadgets permit less (experimentally
+              -- no more than 32K). This seems to be a hard PalmOS limit.
+              if ((string.len(s) + string.len(buf)) >= 32767) then
+                if (itype == "0") then
+                  et = "[Truncated to 32K.]\n"
+                else
+                  et = "iTruncated menu to 32K."
+                        .. "\t\terror.host\t1\ni \t\terror.host\t1\n"
+                end
+                if ((string.len(s) + string.len(et)) < 32767) then
+                  s = et .. s
+                end
+                gui.title("Memory buffer exceeded")
+                break
+              end
+
               s = s .. buf
               gui.title(string.len(s) .. " bytes read")
 
