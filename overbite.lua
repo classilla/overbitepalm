@@ -533,6 +533,7 @@ while true do
 
   if ctev == overbiteLoad then
     urlandlocation()
+    collectgarbage(0) -- Lua 5.0.x uses numbers, not strings
     u, t = os.mem()
     -- Make a guess at how much we can load into memory.
     -- Some PalmOS devices may be very limited on dynamic heap,
@@ -606,6 +607,7 @@ while true do
 
               s = s .. buf
               gui.title(string.len(s) .. " bytes read")
+              collectgarbage(0) -- remove dead string
 
               -- On low memory systems, truncate instead of abort.
               if itype == "0" and string.len(s) >= bfree then
@@ -643,6 +645,7 @@ while true do
       argses = {}
       pos = 1
       -- This will bail at the slightest sign of trouble.
+      -- Don't collect garbage inside the loop; it's too slow.
       while 1 do
         -- find next newline
         q, r = string.find(s, "\n", pos)
@@ -691,8 +694,23 @@ while true do
           if t == q then
             table.insert(sels, "")
           else
-            -- XXX: store only the unique part of the selector?
-            table.insert(sels, string.sub(p, t, q - 1))
+            -- Try to compress the selector by using the menu's selector
+            -- as a prefix.
+            qq = string.sub(p, t, q - 1)
+            if string.len(sel) < 2 then -- not profitable
+              table.insert(sels, qq)
+            else
+              qr, rr = string.find(qq, sel)
+              if qr ~= 1 then
+                table.insert(sels, qq)
+              else
+                if rr == string.len(qq) then
+                  table.insert(sels, "\t")
+                else
+                  table.insert(sels, "\t" .. string.sub(qq, rr + 1))
+                end
+              end
+            end
           end
           r = r + 1
           t = r
@@ -748,6 +766,7 @@ while true do
       end
       gui.setstate(mlist, seli)
     end
+    collectgarbage(0) -- force gc
 
     -- event loop for menu
 
@@ -820,13 +839,20 @@ while true do
             or itypes[lastsel] == "1"
             or itypes[lastsel] == "7"
           then
+            -- decompress host, port and selector
+            nhost = hosts[lastsel]
+            nport = ports[lastsel]
+            nsel = sels[lastsel]
+            if nport == -999 then
+              nhost = host
+              nport = port
+            end
+            if nsel == "\t" then
+              nsel = sel
+            elseif string.sub(nsel, 1, 1) == "\t" then
+              nsel = sel .. string.sub(nsel, 2)
+            end
             if itypes[lastsel] ~= "7" then
-              nhost = hosts[lastsel]
-              nport = ports[lastsel]
-              if nport == -999 then
-                nhost = host
-                nport = port
-              end
               resp = gui.confirm(
                 dses[lastsel]
                   .. "\n\nContinue to? "
@@ -835,7 +861,7 @@ while true do
                   .. nport
                   .. "/"
                   .. itypes[lastsel]
-                  .. sels[lastsel]
+                  .. nsel
               )
             else
               resp = gui.input("Enter parameters")
@@ -849,7 +875,7 @@ while true do
               ev = navigateto(
                 nhost,
                 nport,
-                sels[lastsel],
+                nsel,
                 itypes[lastsel],
                 nargs
               )
@@ -886,6 +912,7 @@ while true do
     end
 
     buildui(1)
+    collectgarbage(0) -- force gc here so the text gadget has more headroom
 
     -- leave room for scrollbar
     tfield = gui.field(
