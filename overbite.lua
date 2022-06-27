@@ -36,8 +36,8 @@
 ]]
 --
 
-aboutstr = "Overbite Palm v0.1-prelease\n"
-  .. "THIS IS A TEST VERSION ONLY.\n\n"
+aboutstr = "Overbite Palm v0.2\n"
+  .. "THIS IS A BETA VERSION ONLY.\n\n"
   .. "(c)2009-2022 Cameron Kaiser\n"
   .. "All rights reserved.\n\n"
   .. "Open source under the BSD 3-clause license."
@@ -591,14 +591,14 @@ while true do
               -- Although we could allocate up to 64K for the buffer, in
               -- practise the scrolling gadgets permit less (experimentally
               -- no more than 32K). This seems to be a hard PalmOS limit.
-              if ((string.len(s) + string.len(buf)) >= 32767) then
-                if (itype == "0") then
+              if (string.len(s) + string.len(buf)) >= 32767 then
+                if itype == "0" then
                   et = "[Truncated to 32K.]\n"
                 else
                   et = "iTruncated menu to 32K."
-                        .. "\t\terror.host\t1\ni \t\terror.host\t1\n"
+                    .. "\t\terror.host\t1\ni \t\terror.host\t1\n"
                 end
-                if ((string.len(s) + string.len(et)) < 32767) then
+                if (string.len(s) + string.len(et)) < 32767 then
                   s = et .. s
                 end
                 gui.title("Memory buffer exceeded")
@@ -750,7 +750,7 @@ while true do
           table.insert(ports, 0)
         end
       end
-      s="" -- recover memory
+      s = "" -- recover memory
     end
 
     gui.destroy()
@@ -872,13 +872,7 @@ while true do
                 nargs = resp
               end
               gui.title("Loading...")
-              ev = navigateto(
-                nhost,
-                nport,
-                nsel,
-                itypes[lastsel],
-                nargs
-              )
+              ev = navigateto(nhost, nport, nsel, itypes[lastsel], nargs)
             end
           else
             -- give up

@@ -30,6 +30,8 @@ You can change and visit the home gopher or one of three built-in bookmarks usin
 
 Menus and text files may be truncated if you have insufficient dynamic heap. This is mostly an issue for 68K Palms, where only a few hundred kilobytes total may be available (ARM Palms with Palm OS 5 should have no issues), and Palms with less than 4MB of RAM will not have enough dynamic heap to run Overbite Palm at all. To see how much memory Overbite Palm thinks is available, select `About Overbite Palm` from the app menu and scroll to the bottom. It will display the OS version and free and total heap space.
 
+There is a hard limit on the amount of text that can be shown in the scrolling text widget; empirically this appears to be 32K, regardless of the amount of heap.
+
 Overbite Palm does not currently support CSO/ph, images, HTML (displayed as text), Telnet/TN3270, hURLs or downloads (either to internal RAM or to the SD card).
 
 ## Building
