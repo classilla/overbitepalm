@@ -2,9 +2,9 @@
 
 Overbite Palm is a Gopher client for classic Palm PDAs and mobiles running at least PalmOS 3.5 with at least 4MB of RAM and a network connection. It has not been tested in webOS under Classic.
 
-Overbite Palm is (C) 2009, 2012, 2015, 2022 Cameron Kaiser. All rights reserved.
+Overbite Palm is (C) 2009, 2012, 2015, 2022, 2023 Cameron Kaiser. All rights reserved.
 
-Overbite Palm is furnished to you under the BSD 3-clause license.
+Overbite Palm is furnished to you under the BSD 3-clause license. The most current release is available from [the releases tab](https://github.com/classilla/overbitepalm/releases).
 
 ## Usage
 
@@ -25,6 +25,8 @@ Text files are displayed using a scrolling text widget. Text is automatically wr
 If you navigate to an item pointing to a search server or other interactive service, Overbite Palm will ask you for a parameter or command to send.
 
 You can change and visit the home gopher or one of three built-in bookmarks using the corresponding choices in the app menu. Shortcuts are available for quickly visiting them.
+
+On Fossil and Abacus Wrist PDAs, the rocker, up/down and back buttons are live. If you press back on the root menu, it will return you to the Launcher. You will need to install networking software; [read this blog post](https://oldvcr.blogspot.com/2023/09/the-fossil-wrist-pda-becomes-tiny.html) for more information.
 
 ## Limitations
 

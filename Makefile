@@ -21,5 +21,5 @@ run: $(OBJ)
 	$(POSE) -load_apps $(OBJ)
 
 xfer: $(OBJ)
-	$(PILOT-XFER) -p usb: -i $(OBJ)
+	$(PILOT-XFER) -p /dev/pilot -i $(OBJ)
 

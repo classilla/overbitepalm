@@ -3,7 +3,7 @@
 -- vim: set ts=2 sts=2 et sw=2 tw=99:
 
  Overbite Palm
- Copyright 2009, 2012, 2015, 2022 Cameron Kaiser. All rights reserved.
+ Copyright 2009, 2012, 2015, 2022, 2023 Cameron Kaiser. All rights reserved.
  Descended from Port-A-Goph (rip)
  Distributed under the BSD 3-clause license.
  
@@ -36,9 +36,9 @@
 ]]
 --
 
-aboutstr = "Overbite Palm v0.2\n"
+aboutstr = "Overbite Palm v0.3\n"
   .. "THIS IS A BETA VERSION ONLY.\n\n"
-  .. "(c)2009-2022 Cameron Kaiser\n"
+  .. "(c)2009-2023 Cameron Kaiser\n"
   .. "All rights reserved.\n\n"
   .. "Open source under the BSD 3-clause license."
 
@@ -72,6 +72,13 @@ cmenu = 0
 overbiteSuppress = -927 -- dummy event
 overbiteLoad = -928 -- new host selected
 overbiteRepaint = -929 -- screen destroyed; needs to be rebuilt
+
+-- load rate
+-- load slower on 68K Palms to avoid exhausting heap
+loadRate = 256
+if string.sub(_OS_VERSION, 1, 1) == "5" then
+  loadRate = 1024
+end
 
 -- library stuff
 
@@ -219,6 +226,12 @@ end
 
 function navigateback()
   if hpos > 1 then
+    -- Recover useless entries early. table.remove() did weird things.
+    hhosts[hpos] = nil
+    hports[hpos] = nil
+    hitypes[hpos] = nil
+    hsels[hpos] = nil
+    hargses[hpos] = nil
     hpos = hpos - 1
     if (hitypes[hpos] == "1" or hitypes[hpos] == "7") and cmenu > 0 then
       -- If cached, use the cache. It's always the last menu we were in.
@@ -238,9 +251,11 @@ function navigateback()
       cdses = {}
       cmenu = cmenu - 1
       urlandlocation()
+      collectgarbage(0)
       return overbiteRepaint
     else
       gui.title("Loading...")
+      collectgarbage(0)
       return overbiteLoad
     end
   else
@@ -394,7 +409,7 @@ end
 function debounce()
   local e, f
 
-  e = keyDown
+  e = keyDown -- 4, appStop is 22
   -- Events don't seem to be reliably debounced with a timeout
   -- of less than 200ms.
   while 1 do
@@ -538,17 +553,20 @@ while true do
     -- Make a guess at how much we can load into memory.
     -- Some PalmOS devices may be very limited on dynamic heap,
     -- particularly PalmOS 4 systems. Assign a reasonable
-    -- maximum. Bail if less than 2K is available.
+    -- maximum. Bail if less than 2K is available. Use different
+    -- heuristics for text and menus.
     --
     -- Since the cache is usually aliased to the current
     -- menu in memory, clearing it not only is unprofitable,
     -- but clearing itypes/dses/etc. wipes the cache. Sadly,
     -- there isn't much we can do to free additional memory
     -- if we're short.
-    kfree = math.floor((t - u) / 8) -- heuristic
     if itype == "0" then
+      kfree = math.floor((t - u) / 6) -- heuristic
       -- The text gadget doubles memory requirements.
       kfree = math.floor(kfree / 2)
+    else
+      kfree = math.floor((t - u) / 8) -- heuristic
     end
     bfree = kfree * 1024
 
@@ -582,7 +600,7 @@ while true do
         while true do
           ev = gui.event()
           if ev == ioPending then
-            buf = eh:read(1024)
+            buf = eh:read(loadRate)
             if buf == nil then
               break
             else
@@ -610,16 +628,19 @@ while true do
               collectgarbage(0) -- remove dead string
 
               -- On low memory systems, truncate instead of abort.
-              if itype == "0" and string.len(s) >= bfree then
-                s = "[Truncated to " .. kfree .. "K.]\n" .. s
-                break
-              end
-              if string.len(s) >= bfree then
-                s = "iTruncated menu to "
-                  .. kfree
-                  .. "K.\t\terror.host\t1\ni \t\terror.host\t1\n"
-                  .. s
-                break
+              if itype == "0" then
+                if string.len(s) >= bfree then
+                  s = "[Truncated to " .. kfree .. "K.]\n" .. s
+                  break
+                end
+              else
+                if string.len(s) >= bfree-(512*hpos) then
+                  s = "iTruncated menu to "
+                    .. kfree
+                    .. "K.\t\terror.host\t1\ni \t\terror.host\t1\n"
+                    .. s
+                  break
+                end
               end
             end
           end
@@ -786,6 +807,8 @@ while true do
         -- 11 = up
         -- 12 = down
         -- 310/7 = centre
+        -- 304 = centre (Fossil)
+        -- 305 = back OR quit (Fossil)
         -- 308 = left
         -- 28 = left (Clie UX50)
         -- 309 = right
@@ -812,17 +835,28 @@ while true do
         end
 
         -- Left as back
-        -- Don't use Dana's keys here; they might be seen on the URL field.
-        if id == 28 or id == 308 then
+        if id == 305 then -- Fossil
+          -- If there's nothing on the stack, then become an appStop.
+          -- If there is, then navigate back.
+          if hpos > 1 then
+            debounce()
+            ev = navigateback()
+          else
+            ev = appStop
+          end
+        end
+        if id == 28 or id == 308 then -- others
+          -- Don't use Dana's keys here; they might be seen on the URL field.
           debounce()
           ev = navigateback()
         end
 
         -- Centre
+        -- Fossil Wrist PDA uses 304
         -- Zire 72 uses 310
         -- TX uses 317
         -- Clie UX50 uses 5893
-        if id == 5893 or id == 310 or id == 317 or id == 10 then
+        if id == 5893 or id == 310 or id == 317 or id == 10 or id == 304 then
           debounce()
           arg = seli
           lastsel = seli
@@ -954,7 +988,9 @@ while true do
 
         -- Left as back
         -- Don't use Dana's keys here; they might be seen on the URL field.
-        if id == 28 or id == 308 then
+        -- For Fossil, this must always have come from a menu ... right?
+        if id == 28 or id == 308 or id == 305 then
+          ev = overbiteSuppress
           debounce()
           ev = navigateback()
         end
